@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %} Dashboard : {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1>Quizzes created</h1>
+    <hr>
+    <div class="row">
+        {% for quiz in user.created_quiz.all %}
+        {% include "_partials/quiz_card.html" %}
+        {% empty %}
+        <h1>You have not created any quizzes</h1>
+        {% endfor %}
+
+    </div>
+</div>
+<div class="container">
+    <h1>Attempted Quizzes</h1>
+    <hr>
+    <div class="row">
+        {% for solution in user.solutions.all %}
+            <div class="col-md-6 col-lg-4">
+                <h3>{{ solution.quiz.title }}</h3>
+                <table>
+                    <tr>
+                        <td>Score:</td>
+                        <td>{{ solution.score }}</td>
+                    </tr>
+                    <tr>
+                        <td>Date:</td>
+                        <td>{{ solution.date }}</td>
+                    </tr>
+                </table>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,38 @@
+
+
+.h-100 {
+    height: 100%;
+}
+
+.h-100vh {
+    height: 100vh;
+}
+.bg-dark-1 {
+  background: #232930;
+  color: #ccc;
+}
+
+.bg-dark-2 {
+    background: #454c52;
+    color: #ccc;
+  }
+
+.w-min-50 {
+    min-width: 50%;
+}
+.bg-dark form .form-control {
+    background: #353b40;
+    color: #ccc;
+}
+.w-unset {
+    width: unset !important;
+}
+
+.radius-5 {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.py-6 {
+    padding-bottom: 3.5em;
+    padding-top: 3.5em;
+}

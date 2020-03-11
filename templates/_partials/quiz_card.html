@@ -1,0 +1,32 @@
+<div class="col-md-6 col-lg-4">
+
+    <div class="quiz-card radius-5 h-100 shado ">
+        <div class="">
+            <div class="container">
+                <h3 class="">
+                    {{ quiz.title }}
+                </h3>
+            </div>
+        </div>
+
+        <div class="">
+
+            <table class="table">
+                <tr class="">
+                    <td>Created on</td>
+                    <td>{{ quiz.date }}</td>
+                </tr>
+                <tr class=''>
+                    <td>Attempts made</td>
+                    <td>{{ quiz.number_of_answers }}</td>
+                </tr>
+                <tr>
+                    <td>Number of questions</td>
+                    <td>{{ quiz.number_of_questions }}</td>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+
+</div>

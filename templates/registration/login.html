@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+
+
+
+{% block content %}
+<div class="container d-flex flex-column justify-content-center align-items-center h-100vh pt-5">
+    <h3> Sign in with the form below</h3>
+    <div class="shadow p-5 w-min-50 my-5">
+        
+        <form action="." method="POST">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <p>
+                <input  class="btn btn-lg btn-primary"type="submit" value="submit">
+            </p>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
