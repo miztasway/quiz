@@ -11,6 +11,7 @@ class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
         fields = '__all__'
+
 class QuestionSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True, required=False)
     class Meta:
@@ -24,7 +25,7 @@ class QuizSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-    
+
 
 class SolutionSerializer(serializers.ModelSerializer):
     choice = AnswerSerializer(many=True, required=False)

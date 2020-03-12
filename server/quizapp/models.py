@@ -36,6 +36,7 @@ class Quiz(models.Model):
 
     def to_json(self):
         return {
+            "id": self.id,
             "title": self.title,
             "score_for_each_question": float(self.score_for_each_question),
             "slug": self.slug,
@@ -71,8 +72,8 @@ class Question(models.Model):
     
     def to_json(self):
         return {
+            "id": self.id,
             "question": self.question,
-           
             "answers": [answer.to_json() for answer in self.answers.all()]
         }
 
@@ -95,6 +96,7 @@ class Answer(models.Model):
 
     def to_json(self):
         return {
+            "id": self.id,
             "answer": self.answer,
             "is_correct": self.is_correct,
         }
@@ -120,6 +122,7 @@ class Solution(models.Model):
         self.score = sum([choice.score for choice in self.choices])
         super(Solution, self).save(*args, **kwargs)
 
+
 class Choice(models.Model):
     user = models.ForeignKey(User, related_name="choices", on_delete=models.CASCADE)
     Solution = models.ForeignKey(Solution,  related_name="choices", on_delete=models.CASCADE)
@@ -127,11 +130,12 @@ class Choice(models.Model):
     answer = models.ForeignKey(Answer, related_name="user_choice", on_delete=models.CASCADE)
     score = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
+    time_taken = models.DurationField()
 
     def __str__(self):
         return "Correct" if self.answer.is_correct else "Incorrect"
     
     def save(self, *args, **kwargs):
-        if self.answer.is_correct:
-            self.score = self.question.quiz.score_for_each_question
+        #if self.answer.is_correct:
+        #    self.score = self.question.quiz.score_for_each_question
         super(Choice, self).save(*args, **kwargs)
