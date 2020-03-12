@@ -12,8 +12,7 @@ class Quiz(models.Model):
     user = models.ForeignKey(User, related_name="created_quiz", on_delete=models.CASCADE)
     score_for_each_question = models.DecimalField(default=0.0, decimal_places=2, max_digits=10)
     pass_mark = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
-    time_to_start = models.DateTimeField()
-    slug = models.SlugField()
+    slug = models.SlugField(blank=True)
     time_for_each_question = models.DurationField()
     date  = models.DateTimeField(auto_now_add=True)
     
@@ -29,7 +28,7 @@ class Quiz(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug  = slugify(quiz.title + f" {self.date.day}")
+            self.slug  = slugify(self.title)
         super(Quiz, self).save(*args, **kwargs)
     
     def get_absolute_url(self):
