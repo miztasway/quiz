@@ -6,6 +6,7 @@ app_name = "quiz"
 
 
 urlpatterns = [
+    path('', views.index, name="home"),
     path("get_all/", views.get_all_user_data, name="get_all"),
     path('quiz/', views.QuizList.as_view(), name="quiz_list"),
     path('quiz/<int:pk>/', views.QuizDetail.as_view(), name="quiz_detail"),

@@ -118,3 +118,8 @@ class CreateSolution(generics.CreateAPIView):
             return Response(solution_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+def index(request):
+    return render(request, 'quiz/index.html', {})

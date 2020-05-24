@@ -7,6 +7,7 @@ app_name = "account"
 urlpatterns = [
     path('login/',LoginView.as_view(), name="login"),
     path('logout/',LogoutView.as_view(), name="logout"),
+    path('register/', views.register, name="register"),
     path('', views.dashboard, name="dashboard"),
     path('api-views/', include('rest_framework.urls') ),
     path('api-views/create/', views.registration_view, name="api_registration"),

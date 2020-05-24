@@ -11,32 +11,37 @@
 </head>
 <body>
     
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm ">
+        <div class="container">
+            <a class="navbar-brand title text-success" href="/" >QuizZz</a>
 
-    <main class="main h-100vh">
-   <!--     <div class="container h-100vh  d-flex flex-column justify-content-center">
-            <div class="row">
-                <div class="col-sm-4">
-                    <div class="h-100 bg-dark-1 p-5 d-flex flex-column justify-content-center align-items-center shadow">
-                        <h2>Create a quiz</h2>
-                        <p>Have your quiz ready in just a sec...</p>
-                    </div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="h-100 bg-dark-2 p-5 d-flex flex-column justify-content-center shadow">
-                        <h2>Answer a quiz</h2>
-                        <p>And most probably surprise your examiner all the way...</p>
-                    </div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="h-100 bg-dark-1 p-5 d-flex flex-column justify-content-center shadow">
-                        <h2>Check your statistics</h2>
-                        <p>Don't cry if its bad...</p>
-                    </div>
-                </div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse  navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active"><a class="nav-link" href="{% url 'quiz:home' %}"> <i class="fas fa-home"></i>Home</a></li>
+                    {% if request.user.is_authenticated %}
+
+                    <li class="nav-item active"><a class="nav-link" href="{% url 'account:dashboard' %}"> <i class="fas fa-dash"></i>Dashboard</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="{% url 'account:logout' %}"> <i class="fas fa-sign-out-alt"></i>Log Out</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'account:register' %}"> <i class="fas fa-sign-in-alt"></i>Register</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'account:login' %}"> <i class="fas fa-sign-in"></i>Log In</a>
+                    </li>
+                    {% endif %}
+
+                </ul>
             </div>
         </div>
-    -->
-
+    </nav>
+    <main class="main h-100vh">
 
         {% block content %}
         {% endblock %}

@@ -7,6 +7,27 @@
 .h-100vh {
     height: 100vh;
 }
+.h-min-50{
+    min-height: 50vh;
+}
+.title{
+    font-size: 26px;
+}
+.text-black{
+    color: #444;
+}
+a {
+    text-decoration: none !important;
+}
+.bg-main-1{
+    background: steelblue;
+}
+.bg-main-2{
+    background: lightblue;
+}
+.bg-main-3{
+    background: slateblue;
+}
 .bg-dark-1 {
   background: #232930;
   color: #ccc;
