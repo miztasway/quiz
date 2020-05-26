@@ -10,10 +10,10 @@ User = get_user_model()
 class Quiz(models.Model):
     title = models.CharField(max_length=300)
     user = models.ForeignKey(User, related_name="created_quiz", on_delete=models.CASCADE)
-    score_for_each_question = models.DecimalField(default=0.0, decimal_places=2, max_digits=10)
-    pass_mark = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
-    time_to_start = models.DateTimeField()
-    slug = models.SlugField()
+    description = models.TextField()
+    score_for_each_question = models.FloatField()
+    pass_mark = models.FloatField()
+    slug = models.SlugField(blank=True)
     time_for_each_question = models.DurationField()
     date  = models.DateTimeField(auto_now_add=True)
     
@@ -29,18 +29,19 @@ class Quiz(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug  = slugify(quiz.title + f" {self.date.day}")
+            self.slug  = slugify(self.title)
         super(Quiz, self).save(*args, **kwargs)
     
     def get_absolute_url(self):
-        return reverse("quiz:quiz", slug=self.slug)
+        return reverse("quiz:quiz", kwargs={'slug':self.slug})
 
     def to_json(self):
         return {
+            "id": self.id,
             "title": self.title,
             "score_for_each_question": float(self.score_for_each_question),
             "slug": self.slug,
-            "time_for_each_question": str(self.time_for_each_question),
+            "time_for_each_question": str(self.time_for_each_question.total_seconds()),
             "pass_mark": float(self.pass_mark),
            
             "user": self.user.username,
@@ -62,7 +63,7 @@ class Question(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        ordering = ("-date",)
+        ordering = ("date",)
     
     def __str__(self):
         return self.question
@@ -72,8 +73,8 @@ class Question(models.Model):
     
     def to_json(self):
         return {
+            "id": self.id,
             "question": self.question,
-           
             "answers": [answer.to_json() for answer in self.answers.all()]
         }
 
@@ -86,7 +87,7 @@ class Answer(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('-date',)
+        ordering = ('date',)
     
     def __str__(self):
         return self.answer
@@ -96,6 +97,7 @@ class Answer(models.Model):
 
     def to_json(self):
         return {
+            "id": self.id,
             "answer": self.answer,
             "is_correct": self.is_correct,
         }
@@ -105,7 +107,7 @@ class Answer(models.Model):
 class Solution(models.Model):
     quiz = models.ForeignKey(Quiz,related_name="solutions", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="solutions", on_delete=models.CASCADE)
-    score = models.DecimalField(default=0.0, max_digits=15, decimal_places=2)
+    score = models.FloatField()
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -118,21 +120,23 @@ class Solution(models.Model):
         return f"<Solution: {self.quiz.title[:20]}>"
     
     def save(self, *args, **kwargs):
-        self.score = sum([choice.score for choice in self.choices])
+        self.score = sum([choice.score for choice in self.choices.all()])
         super(Solution, self).save(*args, **kwargs)
+
 
 class Choice(models.Model):
     user = models.ForeignKey(User, related_name="choices", on_delete=models.CASCADE)
-    Solution = models.ForeignKey(Solution,  related_name="choices", on_delete=models.CASCADE)
+    solution = models.ForeignKey(Solution,  related_name="choices", on_delete=models.CASCADE)
     question = models.ForeignKey(Question, related_name="choices", on_delete=models.CASCADE)
-    answer = models.ForeignKey(Answer, related_name="user_choice", on_delete=models.CASCADE)
-    score = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
+    answer = models.ForeignKey(Answer, related_name="user_choice", on_delete=models.CASCADE, null=True, blank=True)
+    score = models.FloatField()
     date = models.DateTimeField(auto_now_add=True)
+    time_taken = models.DurationField()
 
     def __str__(self):
         return "Correct" if self.answer.is_correct else "Incorrect"
     
     def save(self, *args, **kwargs):
-        if self.answer.is_correct:
-            self.score = self.question.quiz.score_for_each_question
+        #if self.answer.is_correct:
+        #    self.score = self.question.quiz.score_for_each_question
         super(Choice, self).save(*args, **kwargs)
