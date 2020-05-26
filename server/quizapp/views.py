@@ -1,14 +1,17 @@
-from django.shortcuts import render, get_object_or_404
-from django.http.response import HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http.response import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.http import Http404
+from django.core.paginator import Paginator
 from .models import Quiz, Answer, Question, Solution
 import json
+import datetime
 from .permissions import IsOwnerOrReadOnly
-from .serializers import AnswerSerializer, QuizSerializer, QuestionSerializer, AnswerSerializer, ChoiceSerializer, SolutionSerializer
+from .serializers import AnswerSerializer, QuizSerializer, QuestionSerializer, AnswerSerializer, ChoiceSerializer, SolutionSerializer, SolutionCreateSerializer
+from .models import Quiz
 # Create your views here.
 
 @api_view(["GET"])
@@ -44,7 +47,7 @@ class CreateQuiz(generics.CreateAPIView):
         data = {
             'user': request.user.pk,
             'title': r_data.get('title'),
-            'score_for_each_question': r_data.get("time_for_each_question"),
+            'time_for_each_question': r_data.get("time_for_each_question"),
             'pass_mark': r_data.get('pass_mark'),
             'time_for_each_question': r_data.get('time_for_each_question'),
         }
@@ -91,35 +94,84 @@ class CreateSolution(generics.CreateAPIView):
 
     def post(self, request):
         r_data = request.data
+        print(r_data['score'], 'score was \n\n')
         user = request.user.pk
+        
         data = {
             'user': user,
             'quiz': r_data.get('quiz'),
             'score': r_data.get("score"),
         }
-        solution_serializer = SolutionSerializer(data=data)
+        quiz = get_object_or_404(Quiz, id=int(r_data.get('quiz')))
+        solution_query = quiz.solutions.filter(user=request.user)
+        if not solution_query.exists():
+            data['id'] = solution_query[0]
+            for choice in solution.choices.all():
+                choice.delete()
+        
+        solution_serializer = SolutionCreateSerializer(data=data)
         if solution_serializer.is_valid():
             solution = solution_serializer.save()
-            for choice in r_data.get('choice'):
+            for choice in r_data.get('choices'):
+
                 data = {
                     "user": user,
-                    "question": choice.get("question"),
+                    "question": choice["question"],
                     "solution": solution.id,
-                    "score": choice.get("score"),
-                    "answer": choice.get('answer'),
-                    'time_taken': choice.get("time_taken")
+                    "score": choice["score"],
+                    "answer": choice['answer'],
+                    'time_taken': datetime.timedelta(seconds=int(choice["time_taken"]))
                     
                 }
                 serializer = ChoiceSerializer(data=data)
                 if serializer.is_valid():
                     serializer.save()
                 else:
+                    print('I raised the errors 1')
+                    solution.delete()
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response(solution_serializer.data, status=status.HTTP_201_CREATED)
+            solution.save()
+            if request.GET.get('redirect'):
+                redirect('quiz:solution-detail', kwargs={'slug': solution.quiz.slug})
+            return Response(SolutionSerializer(solution).data, status=status.HTTP_201_CREATED)
+
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            print("I raised the errors 2")
+            return Response(solution_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
 def index(request):
-    return render(request, 'quiz/index.html', {})
+    quizzes = Quiz.objects.all()
+    page = int(request.GET.get('page', 0))
+    paginator = Paginator(quizzes, 12)
+    if page > paginator.num_pages:
+        page = paginator.num_pages
+    elif page < 0:
+        page = 0
+    quizzes = paginator.get_page(page)
+    return render(request, 'quiz/index.html', {'quizzes': quizzes})
+
+
+def quiz_detail(request, slug):
+    quiz = get_object_or_404(Quiz, slug=slug)
+    solution_query = quiz.solutions.filter(user=request.user)
+    solution = None
+    if  solution_query.exists():
+        solution = solution_query[0]
+    return render(request, 'quiz/quiz.html', {'quiz': quiz, 'solution': solution})
+
+@login_required
+@api_view(["GET"])
+def get_quiz_data(request, id):
+    quiz = get_object_or_404(Quiz, id=id)
+    return Response(quiz.to_json())
+    
+@login_required
+def solution_detail(request, slug):
+    quiz = get_object_or_404(Quiz, slug=slug)
+    solution_query = quiz.solutions.filter(user=request.user)
+    if not solution_query.exists():
+        return redirect('quiz:quiz', slug=slug)
+    solution = solution_query[0]
+    return render(request, 'quiz/solution_detail.html', {'solution': solution, 'quiz': quiz})

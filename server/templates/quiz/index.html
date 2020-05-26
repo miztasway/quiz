@@ -4,25 +4,49 @@
 
 {% block content %}
 <div class="container py-5  d-flex flex-column justify-content-center">
+    <div class="row no-gutters">
+        <div class="col-md-4">
+            <a href="#">
+                <div
+                    class="h-100 bg-primary text-white p-5 d-flex flex-column justify-content-center align-items-center shadow">
+                    <h2>Create a quiz</h2>
+                    <p>Have your quiz ready in just a sec...</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="">
+                <div class="h-100 bg-success  text-white p-5 d-flex flex-column justify-content-center shadow">
+                    <h2>Answer a quiz</h2>
+                    <p>And most probably surprise your examiner all the way...</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="#">
+                <div class="h-100 bg-secondary text-white p-5 d-flex flex-column justify-content-center shadow">
+                    <h2>Check your statistics</h2>
+                    <p>Don't cry if its bad...</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+</div>
+
+<div class="container py-5">
+    <h3 class="display-4">Recent Quizzes</h3>
+    <hr>
     <div class="row">
-        <div class="col-sm-4">
-            <div class="h-100 bg-dark-1 p-5 d-flex flex-column justify-content-center align-items-center shadow">
-                <h2>Create a quiz</h2>
-                <p>Have your quiz ready in just a sec...</p>
-            </div>
+        {% for quiz in quizzes %}
+        {% include '_partials/quiz_card.html' %}
+        {% empty %}
+        <div class="col-12">    
+            <h3 class="text-danger">
+                There are no quizzes available now.
+            </h3>
         </div>
-        <div class="col-sm-4">
-            <div class="h-100 bg-dark-2 p-5 d-flex flex-column justify-content-center shadow">
-                <h2>Answer a quiz</h2>
-                <p>And most probably surprise your examiner all the way...</p>
-            </div>
-        </div>
-        <div class="col-sm-4">
-            <div class="h-100 bg-dark-1 p-5 d-flex flex-column justify-content-center shadow">
-                <h2>Check your statistics</h2>
-                <p>Don't cry if its bad...</p>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </div>
 

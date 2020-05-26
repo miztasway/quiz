@@ -7,6 +7,9 @@
 .h-100vh {
     height: 100vh;
 }
+.question-card-header-section{
+    min-height: 200px;
+}
 .h-min-50{
     min-height: 50vh;
 }

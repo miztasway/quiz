@@ -1,32 +1,27 @@
-<div class="col-md-6 col-lg-4">
+<div class="col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 py-3">
 
-    <div class="quiz-card radius-5 h-100 shado ">
-        <div class="">
-            <div class="container">
-                <h3 class="">
+    <div class="card quiz-card radius-5 h-100 shadow ">
+        <div class="d-flex align-items-center question-card-header-section text-white bg-primary">
+            <div class="container py-2">
+                <h4>
                     {{ quiz.title }}
-                </h3>
+                </h4>
             </div>
         </div>
 
         <div class="">
-
             <table class="table">
                 <tr class="">
-                    <td>Created on</td>
-                    <td>{{ quiz.date }}</td>
+                    <td>By:</td>
+                    <td>{{ quiz.user.username }}</td>
                 </tr>
                 <tr class=''>
                     <td>Attempts made</td>
                     <td>{{ quiz.number_of_answers }}</td>
                 </tr>
-                <tr>
-                    <td>Number of questions</td>
-                    <td>{{ quiz.number_of_questions }}</td>
-                </tr>
-
             </table>
         </div>
+        <a href="{{ quiz.get_absolute_url }}" class="btn btn-secondary w-100 py-3">Answer</a>
     </div>
 
 </div>

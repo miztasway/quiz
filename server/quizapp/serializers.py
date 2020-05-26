@@ -28,9 +28,12 @@ class QuizSerializer(serializers.ModelSerializer):
 
 
 class SolutionSerializer(serializers.ModelSerializer):
-    choice = AnswerSerializer(many=True, required=False)
     class Meta:
         model = Solution
         fields = '__all__'
         
+class SolutionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Solution
+        fields = '__all__'
         
