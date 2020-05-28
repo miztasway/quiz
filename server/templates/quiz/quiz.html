@@ -74,9 +74,8 @@
             if (this.timeout) {
                 clearTimeout(this.timeout)
             }
-            console.log(this.solution);
-            alert('continue');
-            fetch("{% url 'quiz:create_solution' %}",
+            
+            fetch("{% url 'quiz:api_create_solution' %}",
                 {
                     headers: {
                         'Content-Type': 'application/json',
@@ -86,11 +85,11 @@
                     body: JSON.stringify(this.solution)
                 }
             ).then(e => e.json()).then(result => {
-                
+                window.location.reload();
             }).catch(error => {
                 console.log(error);
-            })
-            console.log('submitting results');
+                alert('Sorry an error occured');
+            });
         };
 
         this.fetch_questions = function () {
@@ -143,7 +142,7 @@
                 self.answered = true;
                 document.getElementById('score').innerText = self.solution.score;
                 console.log(self.solution)
-                self.conduct_quiz();
+                setTimeOut(self.conduct_quiz, 1000);
             }
 
 
@@ -204,7 +203,16 @@
                 this.timeout = setTimeout(this.conduct_quiz, Number(this.question_time) * 1000);
             }
         };
-        this.fetch_questions();
+        this.start_quiz = function(){
+            self = this;
+            return function(e){
+                self.fetch_questions();
+            }
+        }
+        var start = document.getElementById('start');
+        if (start){
+            start.addEventListener('click', this.start_quiz())
+        }
     }
     quiz();
 

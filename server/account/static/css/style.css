@@ -10,6 +10,12 @@
 .question-card-header-section{
     min-height: 200px;
 }
+.hover-show-parent .hover-show{
+    display: none;
+}
+.hover-show-parent:hover .hover-show{
+    display: inline-block;
+}
 .h-min-50{
     min-height: 50vh;
 }

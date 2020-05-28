@@ -152,7 +152,10 @@ def index(request):
     quizzes = paginator.get_page(page)
     return render(request, 'quiz/index.html', {'quizzes': quizzes})
 
-
+@login_required
+def create_quiz(request):
+    return render(request, 'quiz/create_quiz.html', {})
+@login_required
 def quiz_detail(request, slug):
     quiz = get_object_or_404(Quiz, slug=slug)
     solution_query = quiz.solutions.filter(user=request.user)
@@ -166,12 +169,3 @@ def quiz_detail(request, slug):
 def get_quiz_data(request, id):
     quiz = get_object_or_404(Quiz, id=id)
     return Response(quiz.to_json())
-    
-@login_required
-def solution_detail(request, slug):
-    quiz = get_object_or_404(Quiz, slug=slug)
-    solution_query = quiz.solutions.filter(user=request.user)
-    if not solution_query.exists():
-        return redirect('quiz:quiz', slug=slug)
-    solution = solution_query[0]
-    return render(request, 'quiz/solution_detail.html', {'solution': solution, 'quiz': quiz})

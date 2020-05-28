@@ -6,7 +6,7 @@
 <div class="container py-5  d-flex flex-column justify-content-center">
     <div class="row no-gutters">
         <div class="col-md-4">
-            <a href="#">
+            <a href="{% url 'quiz:create_quiz' %}">
                 <div
                     class="h-100 bg-primary text-white p-5 d-flex flex-column justify-content-center align-items-center shadow">
                     <h2>Create a quiz</h2>
@@ -23,7 +23,7 @@
             </a>
         </div>
         <div class="col-md-4">
-            <a href="#">
+            <a href="{% url 'account:dashboard' %}">
                 <div class="h-100 bg-secondary text-white p-5 d-flex flex-column justify-content-center shadow">
                     <h2>Check your statistics</h2>
                     <p>Don't cry if its bad...</p>
