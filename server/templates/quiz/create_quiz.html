@@ -7,8 +7,12 @@
 <div class="container py-2">
   <h2 class="display-3">{% if quiz %}Edit{% else %}Create{% endif %} Quiz</h2>
   <hr>
-  <h1>{{ quiz.user }}</h1>
-
+  {% if quiz %}
+  <div class=" my-4 shadow card d-flex flex-row h-70px align-items-center">
+    <span class="h-100 bg-primary px-5 text-white d-flex align-items-center">Slug</span>
+    <span class="w-100 h-100 bg-white d-flex px-5 align-items-center">{{ quiz.slug }}</span>
+  </div>
+  {% endif %}
 
   <div class="row">
     <div class="col-md-12">
@@ -47,11 +51,11 @@
 
           </table>
           <div class="container">
-            <div class="d-sflex justify-content-between">
-              <h3>Questions</h3>
-
+            <div class="d-flex justify-content-between">
+              
             </div>
             <div class="d-n p-5 shadow">
+              <h3 class="mb-3">Add question</h3>
               <input type="text" class="form-control" id="question-input" placeholder="question">
               <div class="form-group card p-4 my-4">
                 <h4>Add answer</h4>
@@ -71,29 +75,10 @@
                 <span class="btn btn-secondary" id="add_question_button"><i class="fa fas-plus"></i>Add Question</span>
               </div>
             </div>
+            <h3 class="my-3">Questions</h3>
+            <hr>
             <div class="row" id="questions-container">
-              {% for question in quiz.questions.all %}
-              <div class="col-12 py-3">
-                <div class="container py-3 shadow">
-                  <div class="d-flex justify-content-between">
-                    <p class="text-success">{{ question.question }}</p>
-                    <p><span class="text-bold btn btn-success">Edit</span></p>
-                    <p><span class="text-bold btn btn-danger">Delete</span></p>
-                  </div>
-                  <div class="row">
-                    {% for answer in question.answers.all %}
-                    <div class="col-sm-3"><span
-                        class="d-block btn {% cycle 'btn-primary' 'btn-success' 'btn-outline-success' %}">{% if answer.is_correct %}<span
-                          class="px-2">yes</span>{% endif %}{{ answer.answer }}</span></div>
-                    {% endfor %}
-                    <div class="col-sm-3"><span class="d-block btn btn-success">Second answer</span></div>
-                    <div class="col-sm-3"><span class="d-block btn btn-danger">Third answer</span></div>
-                    <div class="col-sm-3"><span class="d-block btn btn-outline-success">Fourth answer</span></div>
-                  </div>
-                </div>
-              </div>
-
-              {% endfor %}
+              <!-- Where all questions will be rendered to -->
             </div>
           </div>
         </div>
@@ -135,9 +120,6 @@
           this.store = result;
           self.update_ui();
         }
-        console.log(result);
-        console.log(this.store);
-        console.log('somethings');
       });
     }
 
@@ -192,6 +174,7 @@
       self = this;
       return function (e) {
         let has_correct_answer = false;
+        console.log(self.current_question);
         if (self.current_question.question.length > 0) {
           for (let i = 0; i < self.current_question.answers.length; i++) {
             if (self.current_question.answers[i]) {
@@ -248,9 +231,11 @@
                   <div class="row">`
         for (let answer_index = 0; answer_index < question.answers.length; answer_index++) {
           let answer = question.answers[answer_index];
-          html += `<div class="col-sm-3"><span class="d-block btn btn-primary `;
+          html += `<div class="col-md-6 col-lg-3 my-3"><span class="h-100 d-block btn `;
           if (answer.is_correct) {
-            html += 'is_correct';
+            html += 'btn-success';
+          } else {
+            html += 'btn-primary';
           }
           html += `">${answer.answer}</span></div>`
         }
@@ -266,7 +251,6 @@
         delete_question_buttons[i].addEventListener('click', this.remove_question())
       }
       document.getElementById('number_of_questions').innerText = self.store.questions.length;
-      document.getElementById('add_question_button').addEventListener('click', this.add_question());
       document.getElementById('title').value = self.store['title'];
       document.getElementById('score_for_each_question').value = self.store.score_for_each_question;
       document.getElementById('time_for_each_question').value = self.store.time_for_each_question;
