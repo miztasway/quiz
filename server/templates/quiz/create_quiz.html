@@ -7,6 +7,7 @@
 <div class="container py-2">
   <h2 class="display-3">{% if quiz %}Edit{% else %}Create{% endif %} Quiz</h2>
   <hr>
+  <h1>{{ quiz.user }}</h1>
 
 
   <div class="row">
@@ -19,22 +20,25 @@
           <table class="table table-striped">
             <tr>
               <td>Title</td>
-              <td><input id="title" class="form-control" type="text" name="title" value="{{ quiz.title}}"></td>
+              <td><input id="title" class="form-control" type="text" name="title" value=""></td>
+            </tr>
+            <tr>
+              <td>Description</td>
+              <td><input id="description" class="form-control" type="text" name="description" value=""></td>
             </tr>
             <tr>
               <td>Time For Each Question</td>
               <td><input type="number" class="form-control" name="time_for_each_question" id="time_for_each_question"
-                  value="{% if quiz %}{{ quiz.time_for_each_question }}{% else %}0{% endif %}"></td>
+                  value="0"></td>
             </tr>
             <tr>
               <td>Score for each Question</td>
               <td><input type="number" class="form-control" name="score_for_each_question" id="score_for_each_question"
-                  value="{% if quiz %}{{ quiz.score_for_each_question }}{% else %}0{% endif %}"></td>
+                  value="0"></td>
             </tr>
             <tr>
               <td>Pass Mark</td>
-              <td><input type="number" class="form-control" min=0 name="pass_mark" id="pass_mark"
-                  value="{% if quiz %}{{ quiz.pass_mark }}{% else %}0{% endif %}"></td>
+              <td><input type="number" class="form-control" min=0 name="pass_mark" id="pass_mark" value="0"></td>
             </tr>
             <tr>
               <td>Number of questions</td>
@@ -43,7 +47,7 @@
 
           </table>
           <div class="container">
-            <div class="d-flex justify-content-between">
+            <div class="d-sflex justify-content-between">
               <h3>Questions</h3>
 
             </div>
@@ -109,6 +113,7 @@
   (function QuizManager() {
     this.store = {
       title: "",
+      description: "",
       time_for_each_question: 0,
       score_for_each_question: 0,
       pass_mark: 0,
@@ -117,17 +122,30 @@
     };
 
     this.current_question = {
+
       question: '',
       answers: [],
     };
 
+    this.get_old_quiz_data = function () {
+      console.log('getting  data')
+      fetch("{{ quiz.get_quiz_data_url }}").then(e => e.json()).then(result => {
+        if (result['id']) {
+
+          this.store = result;
+          self.update_ui();
+        }
+        console.log(result);
+        console.log(this.store);
+        console.log('somethings');
+      });
+    }
 
 
     this.gather_quiz_data = function (name, id) {
       self = this;
       return function (e) {
         self.store[this.name] = this.value;
-        console.log(self.store);
       }
     }
 
@@ -163,9 +181,9 @@
         self.construct_answers();
       }
     };
-    this.get_question_text = function(){
+    this.get_question_text = function () {
       self = this;
-      return function(e){
+      return function (e) {
         self.current_question.question = this.value;
       }
     }
@@ -194,13 +212,17 @@
           question: '',
           answers: [],
         }
+        document.getElementById('question-input').value = '';
+        self.construct_answers();
         self.update_ui();
       }
     };
 
-    this.remove_question = function (id) {
-      this.store.questions.splice(Number(this.getAttribute('dataid')), 1);
-      this.update_ui();
+    this.remove_question = function () {
+      return function (e) {
+        self.store.questions.splice(Number(this.getAttribute('dataid')), 1);
+        self.update_ui();
+      }
     };
 
     this.update_ui = function () {
@@ -211,7 +233,7 @@
       for (let i = 0; i < this.store.questions.length; i++) {
 
         question = this.store.questions[i];
-        if (question == undefined || question == null){
+        if (question == undefined || question == null) {
           return;
         }
         html += `<div class="col-12 py-3">
@@ -237,8 +259,22 @@
               </div>`;
 
       }
+
       questions_container.innerHTML = html;
+      var delete_question_buttons = document.getElementsByClassName('delete-question');
+      for (let i = 0; i < delete_question_buttons.length; i++) {
+        delete_question_buttons[i].addEventListener('click', this.remove_question())
+      }
+      document.getElementById('number_of_questions').innerText = self.store.questions.length;
+      document.getElementById('add_question_button').addEventListener('click', this.add_question());
+      document.getElementById('title').value = self.store['title'];
+      document.getElementById('score_for_each_question').value = self.store.score_for_each_question;
+      document.getElementById('time_for_each_question').value = self.store.time_for_each_question;
+      document.getElementById('description').value = self.store.description;
+      document.getElementById('pass_mark').value = self.store.pass_mark;
+
     };
+
 
     this.construct_answers = function () {
       var answer_container = document.getElementById('add-question-answer-container');
@@ -246,7 +282,7 @@
       let html = '';
       for (let i = 0; i < this.current_question.answers.length; i++) {
         let answer = this.current_question.answers[i];
-        if (answer.is_correct){
+        if (answer.is_correct) {
           html += '<div class="col-sm-6 col-md-4 col-lg-3 py-2 "><div class="btn btn-outline-success text-left hover-show-parent w-100 d-flex justify-content-between">' + this.current_question.answers[i].answer + '<span><span class="hover-show btn r-0 btn-danger delete-answer" dataid="' + i + '">x</span><span></div></div>';
         } else {
           html += '<div class="col-sm-6 col-md-4 col-lg-3 py-2 "><div class="btn btn-primary text-left hover-show-parent w-100 d-flex justify-content-between">' + this.current_question.answers[i].answer + '<span><span class="hover-show btn r-0 btn-danger delete-answer" dataid="' + i + '">x</span><span></div></div>'
@@ -267,19 +303,66 @@
         self.construct_answers();
       }
     };
-    this.save = function(){
+
+    this.check_data = function () {
+      if (this.store.title.length > 0 && this.store.time_for_each_question > 0 && this.store.score_for_each_question > 0 && this.store.pass_mark > 0) {
+        if (this.store.questions.length > 0) {
+          return true;
+        }
+        else {
+          alert('Please add a question');
+        }
+        return false
+      } else {
+        alert('Please make sure all details are filled in');
+        return false
+      }
+    }
+
+
+
+    this.save = function () {
       self = this;
-      return function(){
+      return function () {
+        if (self.check_data()) {
+          console.log(self.store);
+          fetch("{% url 'quiz:api_create_quiz' %}",
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+              },
+              method: 'POST',
+              body: JSON.stringify(self.store)
+            }
+          ).then(e => {
+            return e.json();
+          }).then(result => {
+            console.log(result);
+          }).catch(error => {
+            console.log(error);
+            alert('Sorry an error occured');
+          });
+
+        }
+
 
       }
     }
     document.getElementById('question-input').addEventListener('input', this.get_question_text());
+    document.getElementById('save-quiz').addEventListener('click', this.save());
     document.getElementById('add_question_button').addEventListener('click', this.add_question());
     document.getElementById('add-answer').addEventListener('click', this.add_answer());
     document.getElementById('title').addEventListener('input', this.gather_quiz_data());
     document.getElementById('score_for_each_question').addEventListener('input', this.gather_quiz_data());
     document.getElementById('time_for_each_question').addEventListener('input', this.gather_quiz_data());
+    document.getElementById('description').addEventListener('input', this.gather_quiz_data());
     document.getElementById('pass_mark').addEventListener('input', this.gather_quiz_data());
+
+
+    {% if quiz %}
+    this.get_old_quiz_data()
+    {% endif %}
 
 
 

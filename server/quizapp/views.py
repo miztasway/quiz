@@ -47,37 +47,63 @@ class CreateQuiz(generics.CreateAPIView):
         data = {
             'user': request.user.pk,
             'title': r_data.get('title'),
-            'time_for_each_question': r_data.get("time_for_each_question"),
+            'description': r_data.get('description'),
+            'score_for_each_question': r_data.get("score_for_each_question"),
             'pass_mark': r_data.get('pass_mark'),
             'time_for_each_question': r_data.get('time_for_each_question'),
         }
-        quiz_serializer = QuizSerializer(data=data)
+        quiz_instance = None
+        if (r_data.get('id')):
+            quiz_instance = get_object_or_404(Quiz, id=r_data.get('id'))
+        
+        
+
+        quiz_serializer = QuizSerializer(data=data, instance=quiz_instance)
         if quiz_serializer.is_valid():
             quiz = quiz_serializer.save()
             for question in r_data.get('questions'):
+                question_instance = None
+                if (question.get('id')):
+                    question_query = quiz.questions.filter(pk=int(question.get('id')))
+                    if question_query.exists():
+                        question_instance = question_query[0]
+                
                 data = {
                     "question": question.get("question"),
                     "quiz": quiz.id,
                 }
-                serializer = QuestionSerializer(data=data)
-                if serializer.is_valid():
-                    que = serializer.save()
+                question_serializer = QuestionSerializer(data=data, instance=question_instance)
+                if question_serializer.is_valid():
+                    que = question_serializer.save()
                     for answer in question.get('answers'):
+                        answer_instance = None
+                        if (answer.get('id')):
+                            answer_query = que.answers.filter(id=int(answer.get('id')))
+                            if answer_query.exists():
+                                answer_instance = answer_query[0]
+                        
                         data = {
                             "question": que.id,
                             "answer": answer.get("answer"),
                             "is_correct": answer.get("is_correct"),
                         }
-                        serializer = AnswerSerializer(data=data)
-                        if serializer.is_valid():
-                            serializer.save()
+                        answer_serializer = AnswerSerializer(data=data)
+                        if answer_serializer.is_valid():
+                            answer_serializer.save()
                         else:
-                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                            
+                            return Response(answer_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response(quiz_serializer.data, status=status.HTTP_201_CREATED)
+                    quiz.delete()
+                    return Response(question_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            data = {
+                'quiz_url': quiz.get_absolute_url(),
+                'id': quiz.id,
+                'title': quiz.title,
+            }
+            return Response(data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(quiz_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AnswerList(generics.ListCreateAPIView):
@@ -94,8 +120,8 @@ class CreateSolution(generics.CreateAPIView):
 
     def post(self, request):
         r_data = request.data
-        print(r_data['score'], 'score was \n\n')
         user = request.user.pk
+        
         
         data = {
             'user': user,
@@ -104,16 +130,15 @@ class CreateSolution(generics.CreateAPIView):
         }
         quiz = get_object_or_404(Quiz, id=int(r_data.get('quiz')))
         solution_query = quiz.solutions.filter(user=request.user)
-        if not solution_query.exists():
-            data['id'] = solution_query[0]
-            for choice in solution.choices.all():
-                choice.delete()
+        if solution_query.exists():
+            for solution in solution_query:
+                solution.delete()
+            
         
         solution_serializer = SolutionCreateSerializer(data=data)
         if solution_serializer.is_valid():
             solution = solution_serializer.save()
             for choice in r_data.get('choices'):
-
                 data = {
                     "user": user,
                     "question": choice["question"],
@@ -127,7 +152,6 @@ class CreateSolution(generics.CreateAPIView):
                 if serializer.is_valid():
                     serializer.save()
                 else:
-                    print('I raised the errors 1')
                     solution.delete()
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             solution.save()
@@ -136,7 +160,6 @@ class CreateSolution(generics.CreateAPIView):
             return Response(SolutionSerializer(solution).data, status=status.HTTP_201_CREATED)
 
         else:
-            print("I raised the errors 2")
             return Response(solution_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -153,8 +176,14 @@ def index(request):
     return render(request, 'quiz/index.html', {'quizzes': quizzes})
 
 @login_required
-def create_quiz(request):
-    return render(request, 'quiz/create_quiz.html', {})
+def create_quiz(request, pk=None):
+    if pk:
+        quiz = get_object_or_404(Quiz, id=pk, user=request.user)
+    else:
+        quiz = None
+
+    return render(request, 'quiz/create_quiz.html', {'quiz': quiz})
+
 @login_required
 def quiz_detail(request, slug):
     quiz = get_object_or_404(Quiz, slug=slug)
@@ -169,3 +198,25 @@ def quiz_detail(request, slug):
 def get_quiz_data(request, id):
     quiz = get_object_or_404(Quiz, id=id)
     return Response(quiz.to_json())
+
+@api_view(['GET'])
+def get_quiz_by_slug(request):
+    slug = request.GET.get('slug')
+    if slug:
+        quiz_query = Quiz.objects.filter(slug=slug)
+        if quiz_query.exists():
+            data = {
+                "Found": True,
+                'url': quiz_query[0].get_absolute_url()
+            }
+        else:
+            data = {
+                'Found': False,
+                'error_message': f'{slug} did not match any quiz',
+            }
+    else:
+        data = {
+            "Found": False,
+            'error_message': "A slug must be provided"
+        }
+    return Response(data)

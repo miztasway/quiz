@@ -19,7 +19,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
 class QuizSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True, required=False)
     class Meta:
         model = Quiz
         fields = '__all__'

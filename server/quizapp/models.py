@@ -28,22 +28,26 @@ class Quiz(models.Model):
         return f'<Quiz: {self.title[:30]}>'
     
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug  = slugify(self.title)
         super(Quiz, self).save(*args, **kwargs)
+        if not self.slug:
+            self.slug  = slugify(self.title + f' {self.id}')
+            super(Quiz, self).save(*args, **kwargs)
     
     def get_absolute_url(self):
         return reverse("quiz:quiz", kwargs={'slug':self.slug})
+
+    def get_quiz_data_url(self):
+        return reverse('quiz:quiz-data', kwargs={'id': self.id})
 
     def to_json(self):
         return {
             "id": self.id,
             "title": self.title,
+            'description': self.description,
             "score_for_each_question": float(self.score_for_each_question),
             "slug": self.slug,
-            "time_for_each_question": str(self.time_for_each_question.total_seconds()),
+            "time_for_each_question": int(self.time_for_each_question.total_seconds()),
             "pass_mark": float(self.pass_mark),
-           
             "user": self.user.username,
             "questions": [question.to_json() for question in self.questions.all()]
         }
@@ -122,6 +126,14 @@ class Solution(models.Model):
     def save(self, *args, **kwargs):
         self.score = sum([choice.score for choice in self.choices.all()])
         super(Solution, self).save(*args, **kwargs)
+
+    def passed(self):
+        return self.score >= self.quiz.pass_mark
+
+    def get_grade_level(self):
+        if self.passed():
+            return 'Passed'
+        return 'Failed'
 
 
 class Choice(models.Model):
