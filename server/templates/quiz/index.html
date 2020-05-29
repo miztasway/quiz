@@ -6,7 +6,7 @@
 <div class="container py-5  d-flex flex-column justify-content-center">
     <div class="row no-gutters">
         <div class="col-md-4">
-            <a href="#">
+            <a href="{% url 'quiz:create_quiz' %}">
                 <div
                     class="h-100 bg-primary text-white p-5 d-flex flex-column justify-content-center align-items-center shadow">
                     <h2>Create a quiz</h2>
@@ -23,12 +23,18 @@
             </a>
         </div>
         <div class="col-md-4">
-            <a href="#">
+            <a href="{% url 'account:dashboard' %}">
                 <div class="h-100 bg-secondary text-white p-5 d-flex flex-column justify-content-center shadow">
                     <h2>Check your statistics</h2>
                     <p>Don't cry if its bad...</p>
                 </div>
             </a>
+        </div>
+    </div>
+    <div class="py-3">
+        <div class="shadow p-0 d-flex search-form show flex-row" id="search-form">
+            <input class="w-100 form-control search-input" id="search-input" type="text" placeholder="Enter Quiz Slug">
+            <button class="btn btn-primary" id="search-button">></button>
         </div>
     </div>
     
@@ -51,5 +57,27 @@
 </div>
 
 
+<script>
+    function search (e){
+    var search_term = document.getElementById('search-input').value;
+    if (search_term.length > 0){
+        fetch("{% url 'quiz:get_quiz_by_slug' %}?slug="+search_term).then(e => e.json()).then(
+            result => {
+                if (result['Found']){
+                    window.location = result['url'];
+                }
+                else{
+                    alert(result['error_message'])
+                }
+            }
+        ).catch(e=>{
+            console.log(e);
+        })
+    }
+        
+    }
+    document.getElementById('search-input').addEventListener('change', search);
+    document.getElementById('search-button').addEventListener('click', search);
 
+</script>
 {% endblock %}

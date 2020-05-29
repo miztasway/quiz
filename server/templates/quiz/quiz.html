@@ -7,38 +7,72 @@
 {% block content %}
 <div class="container">
     <div class="my-5">
-        <div class="row">
-            <div class="col-8">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="w-100">
                 <h4 class="display-4 text-success quiz-title" id="{{ quiz.id }}">{{ quiz.title }}</h4>
             </div>
-            <div class="col-4">
-                <h2 id="score"></h2>
+            <div class="col">
+                <div class="d-flex flex-row align-items-end">
+                    {% if quiz.user == request.user %}
+                    <div>
+                        <a href="{% url 'quiz:create_quiz' quiz.id %}" class="btn btn-primary">Edit</a>
+                    </div>
+                    {% endif %}
+                    <div class=" pl-3">
+                        <span>Score:</span>
+
+                        <span class="btn btn-success" id="score">
+                            {% if solution %}{{ solution.score }}{% else %}0{% endif %}</h2>
+                    </div>
+                </div>
             </div>
         </div>
         <hr>
     </div>
-    <div class="container py-5">
+    <div class="d-flex justify-content-center align-items-center" id="answer-quiz-button-container">
+        <button id="answer-quiz" class="btn btn-lg btn-primary">Anwer Quiz</button>
+    </div>
+    <div class="container py-5" >
         <div class="d-flex align-items-center py-5" id="quiz-container">
 
-            <div class="col-12 my-4">
+            <div class="col-12 my-4 py-3 shadow">
                 {% if solution %}
-                <table class="table shadow">
-                    <tr>
-                        <td>Date</td>
-                        <td>{{ solution.date }}</td>
-                    </tr>
-                    <tr>
-                        <td>Score</td>
-                        <td>{{ solution.score }}</td>
-                    </tr>
-                    {% for choice in solution.choices.all %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ choice.score }}</td>
-                        <td>{{ choice.time_taken }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                <h3>Solution details</h3>
+                <hr>
+                <div class="my-3 p-3 card d-flex flex-row justify-content-between align-items-center">
+                    <div>Date Taken</div>
+                    <div>{{ solution.date }}</div>
+                </div>
+                
+                <div class="my-3 p-3 card d-flex flex-row justify-content-between align-items-center">
+                    <div>Grade</div>
+                    <div><span class="btn {% if solution.passed %}btn-success{% else %}btn-danger{% endif %}">{{ solution.get_grade_level }}</span></div>
+                </div>
+                <div class="card mt-4">
+                    <table class="table table-striped ">
+                        <thead>
+                            <tr>
+                                <th>Question Number</th>
+                                <th>Score</th>
+                                <th>Time Taken</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+
+
+                            {% for choice in solution.choices.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ choice.score }}</td>
+                                <td>{{ choice.time_taken }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="lead">This will be your first attempt</p>
                 {% endif %}
 
             </div>
@@ -74,9 +108,8 @@
             if (this.timeout) {
                 clearTimeout(this.timeout)
             }
-            console.log(this.solution);
-            alert('continue');
-            fetch("{% url 'quiz:create_solution' %}",
+
+            fetch("{% url 'quiz:api_create_solution' %}",
                 {
                     headers: {
                         'Content-Type': 'application/json',
@@ -86,11 +119,11 @@
                     body: JSON.stringify(this.solution)
                 }
             ).then(e => e.json()).then(result => {
-                
+                window.location.reload();
             }).catch(error => {
                 console.log(error);
-            })
-            console.log('submitting results');
+                alert('Sorry an error occured');
+            });
         };
 
         this.fetch_questions = function () {
@@ -116,7 +149,6 @@
                 var question = self.questions[self.current_index];
                 var now = new Date();
                 var diff = (now - self.time_start) / 1000;
-                console.log("Difference : " +diff )
                 var choice_data = {
                     "question": question.id,
                     "score": 0,
@@ -132,8 +164,7 @@
                         if (diff <= Number(self.question_time) / 10) {
                             score = Number(self.question_score);
                         } else {
-                            score = Number(self.question_score / 2 + ((self.question_score / 2) * ((self.question_time-diff) / self.question_time)).toFixed(2));
-                            console.log("Score : " + score)
+                            score = Number(self.question_score / 2 + ((self.question_score / 2) * ((self.question_time - diff) / self.question_time)).toFixed(2));
                         }
                         choice_data['score'] = score;
                         self.solution.score += score;
@@ -142,8 +173,8 @@
                 self.solution.choices.push(choice_data);
                 self.answered = true;
                 document.getElementById('score').innerText = self.solution.score;
-                console.log(self.solution)
-                self.conduct_quiz();
+                document.getElementById('quiz-container').innerText = '';
+                setTimeout(self.conduct_quiz, 500);
             }
 
 
@@ -153,9 +184,13 @@
                 this.solution.choices.push({
                     "question": this.questions[this.current_index].id,
                     "score": 0,
-                    'time_taken': this.time_for_each_question,
+                    'time_taken': this.question_time,
+                    'answer': null,
                 });
+
             }
+            document.getElementById('score').innerText = self.solution.score;
+
             var quiz_container = document.getElementById('quiz-container');
             quiz_container.innerHTML = "";
             this.current_index++;
@@ -184,7 +219,7 @@
             for (let i = 0; i < question.answers.length; i++) {
                 let answer = question.answers[i];
                 innerHTML += `
-                            <div class="col-6 col-md-4 col-lg-3">
+                            <div class="col-6 col-md-4 col-lg-3 my-3">
                                 <a class="btn choices w-100 h-100 d-flex align-items-center justify-content-center text-white bg-primary"
                                     answer-id="${ answer.id}">
                                     ${ answer.answer}
@@ -204,7 +239,20 @@
                 this.timeout = setTimeout(this.conduct_quiz, Number(this.question_time) * 1000);
             }
         };
-        this.fetch_questions();
+        this.start_quiz = function () {
+            self = this;
+            return function (e) {
+                var start_container = document.getElementById('answer-quiz-button-container');
+                if (start_container){
+                    start_container.innerHTML = '';
+                }
+                self.fetch_questions();
+            }
+        }
+        var start = document.getElementById('answer-quiz');
+        if (start) {
+            start.addEventListener('click', this.start_quiz())
+        }
     }
     quiz();
 

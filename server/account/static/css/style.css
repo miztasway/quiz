@@ -10,11 +10,47 @@
 .question-card-header-section{
     min-height: 200px;
 }
+.hover-show-parent .hover-show{
+    display: none;
+}
+.hover-show-parent:hover .hover-show{
+    display: inline-block;
+}
 .h-min-50{
     min-height: 50vh;
 }
 .title{
     font-size: 26px;
+}
+.search-form{
+    height: 70px;
+}
+.search-form .search-input{
+    height: 100%;
+    width: 100%;
+    border: none !important;
+}
+.search-form .search-input:focus{
+    border: none !important;
+    outline: none !important;
+    animation: myshow 0.6s ease-in;
+}
+@keyframes myshow {
+    0%{
+        padding: 5px 20px;
+        background: lime;
+    }
+    100%{
+        background: white;
+    }
+}
+.search-form{
+    display: flex;
+}
+
+.search-form button{
+    width: 70px;
+    border-radius: 0 5px 5px 0 !important;
 }
 .text-black{
     color: #444;

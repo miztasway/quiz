@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Quiz{% endblock %}
+
+
+{% block content %}
+<div class="container py-2">
+  <h2 class="display-3">{% if quiz %}Edit{% else %}Create{% endif %} Quiz</h2>
+  <hr>
+  <h1>{{ quiz.user }}</h1>
+
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="row"></div>
+    </div>
+    <div class="col-md-12">
+      <div class="shadow py-4">
+        <div class="container">
+          <table class="table table-striped">
+            <tr>
+              <td>Title</td>
+              <td><input id="title" class="form-control" type="text" name="title" value=""></td>
+            </tr>
+            <tr>
+              <td>Description</td>
+              <td><input id="description" class="form-control" type="text" name="description" value=""></td>
+            </tr>
+            <tr>
+              <td>Time For Each Question</td>
+              <td><input type="number" class="form-control" name="time_for_each_question" id="time_for_each_question"
+                  value="0"></td>
+            </tr>
+            <tr>
+              <td>Score for each Question</td>
+              <td><input type="number" class="form-control" name="score_for_each_question" id="score_for_each_question"
+                  value="0"></td>
+            </tr>
+            <tr>
+              <td>Pass Mark</td>
+              <td><input type="number" class="form-control" min=0 name="pass_mark" id="pass_mark" value="0"></td>
+            </tr>
+            <tr>
+              <td>Number of questions</td>
+              <td id="number_of_questions"></td>
+            </tr>
+
+          </table>
+          <div class="container">
+            <div class="d-sflex justify-content-between">
+              <h3>Questions</h3>
+
+            </div>
+            <div class="d-n p-5 shadow">
+              <input type="text" class="form-control" id="question-input" placeholder="question">
+              <div class="form-group card p-4 my-4">
+                <h4>Add answer</h4>
+                <input type="text" class="form-control" id="answer_input" placeholder="answer">
+                <div class="form-group">
+                  <label for="is_correct">Is correct</label>
+                  <span><input type="checkbox" id="is_correct_input" placeholder="is correct"></span>
+                </div>
+                <div>
+                  <button class='btn btn-success' id="add-answer">Add answer</button>
+                </div>
+              </div>
+              <div class="row" id="add-question-answer-container">
+              </div>
+              <hr>
+              <div class="py-2">
+                <span class="btn btn-secondary" id="add_question_button"><i class="fa fas-plus"></i>Add Question</span>
+              </div>
+            </div>
+            <div class="row" id="questions-container">
+              {% for question in quiz.questions.all %}
+              <div class="col-12 py-3">
+                <div class="container py-3 shadow">
+                  <div class="d-flex justify-content-between">
+                    <p class="text-success">{{ question.question }}</p>
+                    <p><span class="text-bold btn btn-success">Edit</span></p>
+                    <p><span class="text-bold btn btn-danger">Delete</span></p>
+                  </div>
+                  <div class="row">
+                    {% for answer in question.answers.all %}
+                    <div class="col-sm-3"><span
+                        class="d-block btn {% cycle 'btn-primary' 'btn-success' 'btn-outline-success' %}">{% if answer.is_correct %}<span
+                          class="px-2">yes</span>{% endif %}{{ answer.answer }}</span></div>
+                    {% endfor %}
+                    <div class="col-sm-3"><span class="d-block btn btn-success">Second answer</span></div>
+                    <div class="col-sm-3"><span class="d-block btn btn-danger">Third answer</span></div>
+                    <div class="col-sm-3"><span class="d-block btn btn-outline-success">Fourth answer</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="container py-4">
+
+          <button class="btn btn-success" id="save-quiz">Save Quiz</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+<script>
+  (function QuizManager() {
+    this.store = {
+      title: "",
+      description: "",
+      time_for_each_question: 0,
+      score_for_each_question: 0,
+      pass_mark: 0,
+      number_of_questions: 0,
+      questions: [],
+    };
+
+    this.current_question = {
+
+      question: '',
+      answers: [],
+    };
+
+    this.get_old_quiz_data = function () {
+      console.log('getting  data')
+      fetch("{{ quiz.get_quiz_data_url }}").then(e => e.json()).then(result => {
+        if (result['id']) {
+
+          this.store = result;
+          self.update_ui();
+        }
+        console.log(result);
+        console.log(this.store);
+        console.log('somethings');
+      });
+    }
+
+
+    this.gather_quiz_data = function (name, id) {
+      self = this;
+      return function (e) {
+        self.store[this.name] = this.value;
+      }
+    }
+
+    this.get_question_title = function () {
+      self = this;
+      return function (e) {
+        self.current_question['question'] = this.value;
+      }
+    }
+
+    this.add_answer = function () {
+      self = this;
+      return function (e) {
+        var answer_input = document.getElementById('answer_input');
+        var is_correct_input = document.getElementById('is_correct_input');
+        var answer = answer_input.value;
+        var is_correct = is_correct_input.checked;
+        if (answer.length < 1) {
+          alert('Answer input box must not be empty');
+          return;
+        }
+        if (is_correct) {
+          for (let i = 0; i < self.current_question['answers'].length; i++) {
+            self.current_question['answers'][i].is_correct = false;
+          }
+        }
+        self.current_question['answers'].push({
+          'answer': answer,
+          'is_correct': is_correct,
+        });
+        answer_input.value = '';
+        is_correct_input.checked = false;
+        self.construct_answers();
+      }
+    };
+    this.get_question_text = function () {
+      self = this;
+      return function (e) {
+        self.current_question.question = this.value;
+      }
+    }
+
+    this.add_question = function () {
+      self = this;
+      return function (e) {
+        let has_correct_answer = false;
+        if (self.current_question.question.length > 0) {
+          for (let i = 0; i < self.current_question.answers.length; i++) {
+            if (self.current_question.answers[i]) {
+              has_correct_answer = true;
+            }
+          }
+          if (has_correct_answer) {
+            self.store.questions.push(self.current_question);
+          } else {
+            alert('Please make sure you have marked one of the options provided as correct');
+            return;
+          }
+        } else {
+          alert('Please enter a question');
+          return;
+        }
+        self.current_question = {
+          question: '',
+          answers: [],
+        }
+        document.getElementById('question-input').value = '';
+        self.construct_answers();
+        self.update_ui();
+      }
+    };
+
+    this.remove_question = function () {
+      return function (e) {
+        self.store.questions.splice(Number(this.getAttribute('dataid')), 1);
+        self.update_ui();
+      }
+    };
+
+    this.update_ui = function () {
+      var questions_container = document.getElementById('questions-container');
+      questions_container.innerHTML = "";
+      let html = '';
+      let question = null;
+      for (let i = 0; i < this.store.questions.length; i++) {
+
+        question = this.store.questions[i];
+        if (question == undefined || question == null) {
+          return;
+        }
+        html += `<div class="col-12 py-3">
+                <div class="container py-3 shadow">
+                  <div class="d-flex justify-content-between py-2">
+                    <p class="text-success">${question.question}</p>
+                    <div>
+                      <span class="text-bold btn btn-success" dataid="${i}">Edit</span>
+                      <span class="text-bold btn btn-danger delete-question" dataid="${i}">Delete</span>
+                    </div>
+                  </div>
+                  <div class="row">`
+        for (let answer_index = 0; answer_index < question.answers.length; answer_index++) {
+          let answer = question.answers[answer_index];
+          html += `<div class="col-sm-3"><span class="d-block btn btn-primary `;
+          if (answer.is_correct) {
+            html += 'is_correct';
+          }
+          html += `">${answer.answer}</span></div>`
+        }
+        html += `</div>
+                </div>
+              </div>`;
+
+      }
+
+      questions_container.innerHTML = html;
+      var delete_question_buttons = document.getElementsByClassName('delete-question');
+      for (let i = 0; i < delete_question_buttons.length; i++) {
+        delete_question_buttons[i].addEventListener('click', this.remove_question())
+      }
+      document.getElementById('number_of_questions').innerText = self.store.questions.length;
+      document.getElementById('add_question_button').addEventListener('click', this.add_question());
+      document.getElementById('title').value = self.store['title'];
+      document.getElementById('score_for_each_question').value = self.store.score_for_each_question;
+      document.getElementById('time_for_each_question').value = self.store.time_for_each_question;
+      document.getElementById('description').value = self.store.description;
+      document.getElementById('pass_mark').value = self.store.pass_mark;
+
+    };
+
+
+    this.construct_answers = function () {
+      var answer_container = document.getElementById('add-question-answer-container');
+      answer_container.innerHTML = '';
+      let html = '';
+      for (let i = 0; i < this.current_question.answers.length; i++) {
+        let answer = this.current_question.answers[i];
+        if (answer.is_correct) {
+          html += '<div class="col-sm-6 col-md-4 col-lg-3 py-2 "><div class="btn btn-outline-success text-left hover-show-parent w-100 d-flex justify-content-between">' + this.current_question.answers[i].answer + '<span><span class="hover-show btn r-0 btn-danger delete-answer" dataid="' + i + '">x</span><span></div></div>';
+        } else {
+          html += '<div class="col-sm-6 col-md-4 col-lg-3 py-2 "><div class="btn btn-primary text-left hover-show-parent w-100 d-flex justify-content-between">' + this.current_question.answers[i].answer + '<span><span class="hover-show btn r-0 btn-danger delete-answer" dataid="' + i + '">x</span><span></div></div>'
+        }
+      }
+      answer_container.innerHTML = html;
+
+      var delete_answers = document.getElementsByClassName('delete-answer');
+      for (let i = 0; i < delete_answers.length; i++) {
+        delete_answers[i].addEventListener('click', this.delete_answer())
+      }
+    };
+
+    this.delete_answer = function () {
+      self = this;
+      return function (e) {
+        self.current_question.answers.splice(Number(this.getAttribute('dataid')), 1);
+        self.construct_answers();
+      }
+    };
+
+    this.check_data = function () {
+      if (this.store.title.length > 0 && this.store.time_for_each_question > 0 && this.store.score_for_each_question > 0 && this.store.pass_mark > 0) {
+        if (this.store.questions.length > 0) {
+          return true;
+        }
+        else {
+          alert('Please add a question');
+        }
+        return false
+      } else {
+        alert('Please make sure all details are filled in');
+        return false
+      }
+    }
+
+
+
+    this.save = function () {
+      self = this;
+      return function () {
+        if (self.check_data()) {
+          console.log(self.store);
+          fetch("{% url 'quiz:api_create_quiz' %}",
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+              },
+              method: 'POST',
+              body: JSON.stringify(self.store)
+            }
+          ).then(e => {
+            return e.json();
+          }).then(result => {
+            console.log(result);
+          }).catch(error => {
+            console.log(error);
+            alert('Sorry an error occured');
+          });
+
+        }
+
+
+      }
+    }
+    document.getElementById('question-input').addEventListener('input', this.get_question_text());
+    document.getElementById('save-quiz').addEventListener('click', this.save());
+    document.getElementById('add_question_button').addEventListener('click', this.add_question());
+    document.getElementById('add-answer').addEventListener('click', this.add_answer());
+    document.getElementById('title').addEventListener('input', this.gather_quiz_data());
+    document.getElementById('score_for_each_question').addEventListener('input', this.gather_quiz_data());
+    document.getElementById('time_for_each_question').addEventListener('input', this.gather_quiz_data());
+    document.getElementById('description').addEventListener('input', this.gather_quiz_data());
+    document.getElementById('pass_mark').addEventListener('input', this.gather_quiz_data());
+
+
+    {% if quiz %}
+    this.get_old_quiz_data()
+    {% endif %}
+
+
+
+
+  })();
+</script>
+{% endblock %}
