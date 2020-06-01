@@ -60,6 +60,8 @@ class Quiz(models.Model):
             if solution.user == user:
                 return True
         return False
+    def number_of_questions(self):
+        return len(self.questions.all())
 
 class Question(models.Model):
     quiz = models.ForeignKey(Quiz, related_name="questions", on_delete=models.CASCADE)

@@ -36,8 +36,21 @@
         <div class="d-flex align-items-center py-5" id="quiz-container">
 
             <div class="col-12 my-4 py-3 shadow">
+                <div class="my-3 card">
+                    <div class="card-header">Description</div>
+                    <p class="card-body">{{ quiz.description }}</p>
+                </div>
+                <div class="card">
+
+                    <table class="table table-striped ">
+                        <tr><td>Time for each question</td><td>{{ quiz.time_for_each_question }}</td></tr>
+                        <tr><td>Score for each question</td><td>{{ quiz.score_for_each_question }}</td></tr>
+                        <tr><td>Created by</td><td>{{ quiz.user.username }}</td></tr>
+                        <tr><td>Number of questions</td><td>{{ quiz.number_of_questions }}</td></tr>
+                    </table>
+                </div>
                 {% if solution %}
-                <h3>Solution details</h3>
+                <h3 class="mt-4">Solution details From your last attempt</h3>
                 <hr>
                 <div class="my-3 p-3 card d-flex flex-row justify-content-between align-items-center">
                     <div>Date Taken</div>
