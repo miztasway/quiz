@@ -54,17 +54,19 @@ class CreateQuiz(generics.CreateAPIView):
         }
         quiz_instance = None
         if (r_data.get('id')):
-            quiz_instance = get_object_or_404(Quiz, id=r_data.get('id'))
-        
-        
+            quiz_instance = get_object_or_404(Quiz, id=r_data.get('id'), user=request.user)
+            for question in quiz_instance.questions.all():
+                question.delete()
 
         quiz_serializer = QuizSerializer(data=data, instance=quiz_instance)
+
         if quiz_serializer.is_valid():
+            
             quiz = quiz_serializer.save()
             for question in r_data.get('questions'):
                 question_instance = None
                 if (question.get('id')):
-                    question_query = quiz.questions.filter(pk=int(question.get('id')))
+                    question_query = quiz.questions.filter(id=int(question.get('id')))
                     if question_query.exists():
                         question_instance = question_query[0]
                 
@@ -153,6 +155,7 @@ class CreateSolution(generics.CreateAPIView):
                     serializer.save()
                 else:
                     solution.delete()
+                    print('Error occured here', serializer.errors)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             solution.save()
             if request.GET.get('redirect'):
@@ -160,6 +163,7 @@ class CreateSolution(generics.CreateAPIView):
             return Response(SolutionSerializer(solution).data, status=status.HTTP_201_CREATED)
 
         else:
+            print('Error occured 3', solution_serializer.errors)
             return Response(solution_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -220,3 +224,12 @@ def get_quiz_by_slug(request):
             'error_message': "A slug must be provided"
         }
     return Response(data)
+
+@api_view(['GET'])
+def delete_question(request, id):
+    question = get_object_or_404(Question, id=id)
+    if question.quiz.user == request.user:
+        question.delete()
+        return Response({'completed': True}, status=status.HTTP_200_OK)
+    return Response({'completed': False, 'message': 'Not authorized'}, status=status.HTTP_401_UNAUTHORIZED)
+    

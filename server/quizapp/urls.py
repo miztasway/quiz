@@ -14,6 +14,7 @@ urlpatterns = [
     path('create/quiz/<int:pk>/', views.create_quiz, name="create_quiz"),
     # api endpoint
     path('api/search-quiz/', views.get_quiz_by_slug, name="get_quiz_by_slug"),
+    path('api/question/delete/<int:id>/', views.get_quiz_by_slug, name="delete_question"),
     path('api/quiz/<int:pk>/', views.QuizDetail.as_view(), name="api_quiz_detail"),
     path('quiz/<int:id>/data/', views.get_quiz_data, name="quiz-data"),
     path('api/quiz/create/', views.CreateQuiz.as_view(), name="api_create_quiz"),
