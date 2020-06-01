@@ -31,7 +31,7 @@ class Quiz(models.Model):
         super(Quiz, self).save(*args, **kwargs)
         if not self.slug:
             self.slug  = slugify(self.title + f' {self.id}')
-            super(Quiz, self).save(*args, **kwargs)
+            self.save()
     
     def get_absolute_url(self):
         return reverse("quiz:quiz", kwargs={'slug':self.slug})

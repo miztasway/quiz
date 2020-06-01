@@ -202,7 +202,18 @@
     };
 
     this.remove_question = function () {
+      self = this;
       return function (e) {
+        let dataid = Number(this.getAttribute('dataid'));
+        if (self.store.questions[dataid].delete_url){
+          fetch(self.store.questions[id].delete_url).then(e => e.json()).then(result => {
+            if (result['completed']){
+              console.log('Deleted');
+            }else{
+              console.log(result['message']);
+            }
+          }).catch(e => console.log(e))
+        }
         self.store.questions.splice(Number(this.getAttribute('dataid')), 1);
         self.update_ui();
       }
@@ -323,6 +334,7 @@
             return e.json();
           }).then(result => {
             console.log(result);
+            window.location = result['quiz_url'];
           }).catch(error => {
             console.log(error);
             alert('Sorry an error occured');
